@@ -227,11 +227,13 @@ onUnmounted(() => {
     <div class="aurora" aria-hidden="true" />
     <div class="grain" aria-hidden="true" />
 
-    <div class="fixed right-4 top-4 z-40 flex items-center sm:right-6 sm:top-5">
+    <div
+      class="fixed right-4 top-4 z-40 flex items-center rounded-lg border border-line bg-bg-soft p-0.5 shadow-sm sm:right-6 sm:top-5"
+    >
       <button
         type="button"
-        class="grid size-8 place-items-center transition-colors"
-        :class="!dark ? 'text-accent' : 'text-ink-dim hover:text-ink'"
+        class="grid size-8 place-items-center rounded-md transition-colors"
+        :class="!dark ? 'bg-bg-inset text-accent' : 'text-ink-dim hover:text-ink'"
         :aria-pressed="!dark"
         aria-label="Light theme"
         @click="setTheme(false)"
@@ -240,18 +242,18 @@ onUnmounted(() => {
       </button>
       <button
         type="button"
-        class="grid size-8 place-items-center transition-colors"
-        :class="dark ? 'text-accent' : 'text-ink-dim hover:text-ink'"
+        class="grid size-8 place-items-center rounded-md transition-colors"
+        :class="dark ? 'bg-bg-inset text-accent' : 'text-ink-dim hover:text-ink'"
         :aria-pressed="dark"
         aria-label="Dark theme"
         @click="setTheme(true)"
       >
         <AppIcon name="moon" class="size-4" />
       </button>
-      <span class="mx-1.5 h-4 w-px bg-line" aria-hidden="true" />
+      <span class="mx-0.5 h-4 w-px bg-line" aria-hidden="true" />
       <button
         type="button"
-        class="grid size-8 place-items-center text-ink-dim transition-colors hover:text-ink"
+        class="grid size-8 place-items-center rounded-md text-ink-dim transition-colors hover:text-ink"
         aria-label="Refresh"
         @click="onRefresh"
       >
