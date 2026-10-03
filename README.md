@@ -1,4 +1,4 @@
-# status-ui
+# gatus-fe
 
 自建的 Gatus 状态页前端。后端（Gatus）保持原样，本项目只消费它的只读 API：
 
@@ -84,3 +84,7 @@ src/
 functions/
 └── api/[[path]].ts     # Pages Function 代理
 ```
+
+## License
+
+[MIT](./LICENSE)
