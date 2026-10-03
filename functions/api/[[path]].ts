@@ -18,7 +18,8 @@ export const onRequest = async ({ request, params, env }: PagesContext): Promise
   const path = Array.isArray(params.path) ? params.path.join('/') : (params.path ?? '')
   const { search } = new URL(request.url)
 
-  const upstream = await fetch(`${base}/api/${path}${search}`, {
+  const target = `${base}/api/${path}${search}`
+  const upstream = await fetch(target, {
     headers: { accept: 'application/json', 'accept-encoding': 'gzip' },
   })
 
@@ -27,6 +28,8 @@ export const onRequest = async ({ request, params, env }: PagesContext): Promise
     headers: {
       'content-type': upstream.headers.get('content-type') ?? 'application/json',
       'cache-control': 'public, max-age=10',
+      'x-upstream': target,
+      'x-upstream-status': String(upstream.status),
     },
   })
 }
