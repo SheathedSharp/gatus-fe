@@ -2,8 +2,8 @@ import { defineConfig, loadEnv } from 'vite'
 import vue from '@vitejs/plugin-vue'
 import tailwindcss from '@tailwindcss/vite'
 
-// 本地开发：/api/* 代理到 Gatus 后端（monitor 受 Zero Trust 保护，
-// 需要 .env.local 里配置 Service Token 才能访问）
+// 本地开发：/api/* 代理到 Gatus 后端（受 Zero Trust 保护时，
+// 在 .env.local 里配置 Service Token）
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), '')
   const accessHeaders =

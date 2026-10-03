@@ -10,6 +10,12 @@ import EndpointCard from './components/EndpointCard.vue'
 
 const { endpoints, error, loading, lastUpdated, refresh } = useGatus(30_000)
 
+/* ---------- 站点信息（通过环境变量注入，仓库内不保留真实域名） ---------- */
+
+const siteHost = import.meta.env.VITE_SITE_HOST ?? 'status.example.com'
+const siteUrl = import.meta.env.VITE_SITE_URL ?? 'https://example.com'
+const siteLink = siteUrl.replace(/^https?:\/\//, '').replace(/\/+$/, '')
+
 /* ---------- 主题 ---------- */
 
 const dark = ref(true)
@@ -284,7 +290,7 @@ onUnmounted(() => {
             />
             <span class="relative inline-flex size-1.5 rounded-full bg-up" />
           </span>
-          status.example.com
+          {{ siteHost }}
         </p>
 
         <h1
@@ -384,15 +390,15 @@ onUnmounted(() => {
             <p class="font-display text-lg leading-none">
               zayju<span class="text-accent">.</span>
             </p>
-            <a
-              href="https://example.com"
-              target="_blank"
-              rel="noreferrer"
-              class="mt-1 inline-flex items-center gap-1 text-xs text-ink-dim transition-colors hover:text-accent"
-            >
-              example.com
-              <AppIcon name="arrow" class="size-3" />
-            </a>
+                <a
+                  :href="siteUrl"
+                  target="_blank"
+                  rel="noreferrer"
+                  class="mt-1 inline-flex items-center gap-1 text-xs text-ink-dim transition-colors hover:text-accent"
+                >
+                  {{ siteLink }}
+                  <AppIcon name="arrow" class="size-3" />
+                </a>
           </div>
         </div>
         <p class="mt-4 max-w-xs text-xs leading-relaxed text-ink-dim">

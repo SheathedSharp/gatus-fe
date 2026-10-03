@@ -1,7 +1,7 @@
 interface Env {
-  /** Gatus 后端地址，默认 https://monitor.example.com */
+  /** Gatus 后端地址，如 https://monitor.example.com（必须配置） */
   GATUS_API_BASE?: string
-  /** Cloudflare Access Service Token（monitor 受 Zero Trust 保护） */
+  /** Cloudflare Access Service Token（后端受 Zero Trust 保护时配置） */
   CF_ACCESS_CLIENT_ID?: string
   CF_ACCESS_CLIENT_SECRET?: string
 }
@@ -19,12 +19,12 @@ const CORS_HEADERS = {
 }
 
 /**
- * Cloudflare Pages Function：把 /api/* 代理到 Gatus 后端（monitor.example.com）。
+ * Cloudflare Pages Function：把 /api/* 代理到 Gatus 后端。
  *
  * - 必须通过 pages.dev 域名访问（跨 Zone），同 Zone 子请求会被 Cloudflare
  *   直接送往源站、绕过隧道导致 404。
- * - monitor 受 Zero Trust 保护，这里用 Service Token 通过 Access 校验。
- * - 前端生产环境通过 VITE_API_BASE=https://your-project.pages.dev 直连这里，
+ * - 后端受 Zero Trust 保护时，用 Service Token 通过 Access 校验。
+ * - 前端生产环境通过 VITE_API_BASE 指向 Pages 项目的 pages.dev 域名直连这里，
  *   由这里附带 CORS 头，浏览器跨域读取。
  */
 export const onRequest = async ({ request, params, env }: PagesContext): Promise<Response> => {
@@ -32,7 +32,14 @@ export const onRequest = async ({ request, params, env }: PagesContext): Promise
     return new Response(null, { status: 204, headers: CORS_HEADERS })
   }
 
-  const base = (env.GATUS_API_BASE ?? 'https://monitor.example.com').replace(/\/+$/, '')
+  const base = (env.GATUS_API_BASE ?? '').replace(/\/+$/, '')
+  if (!base) {
+    return new Response(JSON.stringify({ error: 'GATUS_API_BASE is not configured' }), {
+      status: 500,
+      headers: { 'content-type': 'application/json', ...CORS_HEADERS },
+    })
+  }
+
   const path = Array.isArray(params.path) ? params.path.join('/') : (params.path ?? '')
   const { search } = new URL(request.url)
 

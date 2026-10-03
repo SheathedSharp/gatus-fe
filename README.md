@@ -3,7 +3,7 @@
 自建的 Gatus 状态页前端。后端（Gatus）保持原样，本项目只消费它的只读 API：
 
 - 数据源：`GET /api/v1/endpoints/statuses`
-- 开发环境：Vite 代理 `/api/*` → `https://monitor.example.com`
+- 开发环境：Vite 代理 `/api/*` → `GATUS_API_BASE`（示例：`https://monitor.example.com`）
 - 生产环境：Cloudflare Pages Function 同源代理（见 `functions/api/[[path]].ts`）
 
 ## 技术栈
@@ -24,6 +24,8 @@ npm run dev
 ```bash
 GATUS_API_BASE=https://monitor.example.com npm run dev
 ```
+
+完整变量说明见下方「环境变量」，可复制 `.env.example` 到 `.env.local` 填写。
 
 ## 自定义指南
 
@@ -54,7 +56,7 @@ npm run preview   # 本地预览构建产物
 2. 选择本仓库，构建配置：
    - Build command: `npm run build`
    - Build output directory: `dist`
-3. （可选）环境变量：`GATUS_API_BASE=https://monitor.example.com`
+3. 环境变量：`GATUS_API_BASE=https://monitor.example.com`，以及下方的站点展示变量
 4. 部署后在 Pages 项目里绑定自定义域名
 
 方式二：命令行（当前使用方式，Pages 项目 `gatus-fe`）
@@ -65,11 +67,21 @@ export CLOUDFLARE_ACCOUNT_ID=xxx
 npm run deploy   # 构建并部署到 Cloudflare Pages
 ```
 
-默认地址：https://your-project.pages.dev
+默认地址：`https://<project>.pages.dev`
 
-> 域名布局：`status.example.com` 为前端（Cloudflare Pages），
+> 域名布局示例：`status.example.com` 为前端（Cloudflare Pages），
 > `monitor.example.com` 为 Gatus 后端（Cloudflare Tunnel）。
-> 后端地址通过环境变量 `GATUS_API_BASE` 切换。
+> 所有真实域名通过环境变量注入，仓库内只保留占位符。
+
+## 环境变量
+
+| 变量 | 用途 | 示例 |
+| --- | --- | --- |
+| `GATUS_API_BASE` | Gatus 后端地址（dev 代理 / Pages Function） | `https://monitor.example.com` |
+| `VITE_API_BASE` | 生产构建时前端直连的 Pages Function 地址 | `https://your-project.pages.dev` |
+| `VITE_SITE_HOST` | 页面顶部展示的站点域名 | `status.example.com` |
+| `VITE_SITE_URL` | 页脚外链地址 | `https://example.com` |
+| `CF_ACCESS_CLIENT_ID` / `CF_ACCESS_CLIENT_SECRET` | 后端受 Zero Trust 保护时的 Service Token（仅 Pages 环境变量 / `.env.local`） | — |
 
 ## 目录结构
 
