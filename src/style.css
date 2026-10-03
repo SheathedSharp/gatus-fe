@@ -1,0 +1,72 @@
+@import "tailwindcss";
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+/* ============================================================
+   主题变量：想换配色/圆角，改这里就够了
+   ============================================================ */
+:root {
+  --bg: #0b0e14;
+  --bg-soft: #11151f;
+  --bg-card: #151a26;
+  --border: #232a3a;
+  --text: #e6e9f0;
+  --text-dim: #8b93a7;
+
+  --up: #3ecf8e;
+  --down: #f2555a;
+  --degraded: #f0b429;
+  --unknown: #4a5164;
+
+  --radius: 12px;
+}
+
+:root:not(.dark) {
+  --bg: #f6f7f9;
+  --bg-soft: #ffffff;
+  --bg-card: #ffffff;
+  --border: #e5e7eb;
+  --text: #111827;
+  --text-dim: #6b7280;
+
+  --up: #16a34a;
+  --down: #dc2626;
+  --degraded: #d97706;
+  --unknown: #9ca3af;
+}
+
+/* 把 CSS 变量映射成 Tailwind 工具类：bg-bg-card / text-ink-dim / border-line / text-up ... */
+@theme inline {
+  --color-bg: var(--bg);
+  --color-bg-soft: var(--bg-soft);
+  --color-bg-card: var(--bg-card);
+  --color-line: var(--border);
+  --color-ink: var(--text);
+  --color-ink-dim: var(--text-dim);
+  --color-up: var(--up);
+  --color-down: var(--down);
+  --color-degraded: var(--degraded);
+  --color-unknown: var(--unknown);
+}
+
+html,
+body,
+#app {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family:
+    ui-sans-serif,
+    system-ui,
+    -apple-system,
+    "Segoe UI",
+    Roboto,
+    "PingFang SC",
+    "Noto Sans SC",
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
