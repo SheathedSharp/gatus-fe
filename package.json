@@ -2,7 +2,16 @@
   "name": "gatus-fe",
   "private": true,
   "version": "0.1.0",
+  "description": "Anthropic-inspired status page UI for Gatus",
   "type": "module",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/SheathedSharp/gatus-fe.git"
+  },
+  "bugs": {
+    "url": "https://github.com/SheathedSharp/gatus-fe/issues"
+  },
   "scripts": {
     "dev": "vite",
     "build": "vue-tsc --noEmit && vite build",
