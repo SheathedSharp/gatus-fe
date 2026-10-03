@@ -3,50 +3,102 @@
 @custom-variant dark (&:where(.dark, .dark *));
 
 /* ============================================================
-   主题变量：想换配色/圆角，改这里就够了
+   Zayju Status — 设计系统
+   灵感：Anthropic 的暖调编辑感 × Apple 的精致通透
+   配色：取自 GitHub 头像的酒红 / 梅子 / 蜜桃
+   想换配色，改下面的 CSS 变量即可
    ============================================================ */
-:root {
-  --bg: #0b0e14;
-  --bg-soft: #11151f;
-  --bg-card: #151a26;
-  --border: #232a3a;
-  --text: #e6e9f0;
-  --text-dim: #8b93a7;
 
-  --up: #3ecf8e;
-  --down: #f2555a;
-  --degraded: #f0b429;
-  --unknown: #4a5164;
-
-  --radius: 12px;
+@font-face {
+  font-family: "Fraunces";
+  font-style: normal;
+  font-weight: 300 700;
+  font-display: swap;
+  src: url("/fonts/fraunces-latin.woff2") format("woff2");
 }
 
-:root:not(.dark) {
-  --bg: #f6f7f9;
+@font-face {
+  font-family: "Fraunces";
+  font-style: italic;
+  font-weight: 300 700;
+  font-display: swap;
+  src: url("/fonts/fraunces-latin-italic.woff2") format("woff2");
+}
+
+:root {
+  /* 字体 */
+  --ui-font:
+    -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, "PingFang SC",
+    "Hiragino Sans GB", "Noto Sans SC", sans-serif;
+  --display-font: "Fraunces", ui-serif, "New York", Georgia, "Songti SC", serif;
+  --mono-font: ui-monospace, "SF Mono", SFMono-Regular, Menlo, Consolas, monospace;
+
+  /* 浅色 · 暖象牙纸感 */
+  --bg: #faf7f2;
   --bg-soft: #ffffff;
   --bg-card: #ffffff;
-  --border: #e5e7eb;
-  --text: #111827;
-  --text-dim: #6b7280;
+  --bg-inset: #f1ebe3;
+  --border: #e9e1d7;
+  --border-strong: #dbd0c3;
+  --text: #1e1619;
+  --text-dim: #6f625e;
+  --accent: #9d2b3f;
+  --peach: #d98d6e;
+  --up: #2a6e51;
+  --down: #b23a2e;
+  --degraded: #8a5e12;
+  --unknown: #a2968f;
 
-  --up: #16a34a;
-  --down: #dc2626;
-  --degraded: #d97706;
-  --unknown: #9ca3af;
+  --card-radius: 1.25rem;
+  --elev-1: 0 1px 2px rgb(30 15 20 / 0.05), 0 12px 32px -20px rgb(30 15 20 / 0.28);
+  --elev-2: 0 2px 6px rgb(30 15 20 / 0.07), 0 22px 44px -22px rgb(30 15 20 / 0.38);
 }
 
-/* 把 CSS 变量映射成 Tailwind 工具类：bg-bg-card / text-ink-dim / border-line / text-up ... */
+.dark {
+  /* 深色 · 梅子酒底 */
+  --bg: #171018;
+  --bg-soft: #1e151d;
+  --bg-card: #211823;
+  --bg-inset: #2a1f29;
+  --border: #372a34;
+  --border-strong: #47353f;
+  --text: #f3eae6;
+  --text-dim: #a7949b;
+  --accent: #e8a18c;
+  --peach: #e8a18c;
+  --up: #6fc098;
+  --down: #ec8073;
+  --degraded: #e2b364;
+  --unknown: #71616b;
+
+  --elev-1: 0 1px 2px rgb(0 0 0 / 0.35), 0 14px 36px -22px rgb(0 0 0 / 0.65);
+  --elev-2: 0 2px 6px rgb(0 0 0 / 0.4), 0 24px 48px -24px rgb(0 0 0 / 0.75);
+}
+
+/* 把 CSS 变量映射成 Tailwind 工具类：bg-bg-card / text-ink-dim / border-line / text-accent ... */
 @theme inline {
   --color-bg: var(--bg);
   --color-bg-soft: var(--bg-soft);
   --color-bg-card: var(--bg-card);
+  --color-bg-inset: var(--bg-inset);
   --color-line: var(--border);
+  --color-line-strong: var(--border-strong);
   --color-ink: var(--text);
   --color-ink-dim: var(--text-dim);
+  --color-accent: var(--accent);
+  --color-peach: var(--peach);
   --color-up: var(--up);
   --color-down: var(--down);
   --color-degraded: var(--degraded);
   --color-unknown: var(--unknown);
+
+  --font-sans: var(--ui-font);
+  --font-display: var(--display-font);
+  --font-mono: var(--mono-font);
+
+  --radius-card: var(--card-radius);
+  --shadow-soft: var(--elev-1);
+  --shadow-lift: var(--elev-2);
 }
 
 html,
@@ -59,14 +111,172 @@ body {
   margin: 0;
   background: var(--bg);
   color: var(--text);
-  font-family:
-    ui-sans-serif,
-    system-ui,
-    -apple-system,
-    "Segoe UI",
-    Roboto,
-    "PingFang SC",
-    "Noto Sans SC",
-    sans-serif;
+  font-family: var(--ui-font);
   -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+::selection {
+  background: color-mix(in oklab, var(--accent) 20%, transparent);
+}
+
+:focus-visible {
+  outline: 2px solid color-mix(in oklab, var(--accent) 60%, transparent);
+  outline-offset: 2px;
+}
+
+/* —— 氛围背景：极淡的暖色光晕 —— */
+.aurora {
+  position: fixed;
+  inset: 0;
+  z-index: -10;
+  pointer-events: none;
+  background:
+    radial-gradient(
+      55rem 38rem at 12% -12%,
+      color-mix(in oklab, var(--accent) 9%, transparent),
+      transparent 70%
+    ),
+    radial-gradient(
+      45rem 32rem at 92% 4%,
+      color-mix(in oklab, var(--peach) 11%, transparent),
+      transparent 70%
+    ),
+    radial-gradient(
+      50rem 36rem at 50% 112%,
+      color-mix(in oklab, var(--accent) 7%, transparent),
+      transparent 72%
+    );
+}
+
+/* —— 纸张颗粒感 —— */
+.grain {
+  position: fixed;
+  inset: 0;
+  z-index: -9;
+  pointer-events: none;
+  opacity: 0.04;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='180' height='180' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+.dark .grain {
+  opacity: 0.055;
+}
+
+/* —— 卡片 —— */
+.card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--card-radius);
+  box-shadow: var(--elev-1);
+  transition:
+    transform 0.35s cubic-bezier(0.22, 1, 0.36, 1),
+    box-shadow 0.35s cubic-bezier(0.22, 1, 0.36, 1),
+    border-color 0.35s ease;
+}
+
+.card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--elev-2);
+  border-color: color-mix(in oklab, var(--accent) 26%, var(--border));
+}
+
+/* —— 头像徽章 —— */
+.avatar-glow {
+  position: absolute;
+  inset: -22%;
+  border-radius: 9999px;
+  filter: blur(22px);
+  opacity: 0.5;
+  background: radial-gradient(
+    circle at 50% 50%,
+    color-mix(in oklab, var(--accent) 55%, transparent),
+    transparent 70%
+  );
+  animation: halo-pulse 4.5s ease-in-out infinite;
+}
+
+.avatar-glow[data-state="down"] {
+  background: radial-gradient(
+    circle at 50% 50%,
+    color-mix(in oklab, var(--down) 55%, transparent),
+    transparent 70%
+  );
+  animation-duration: 2.2s;
+}
+
+.avatar-glow[data-state="degraded"] {
+  background: radial-gradient(
+    circle at 50% 50%,
+    color-mix(in oklab, var(--degraded) 55%, transparent),
+    transparent 70%
+  );
+}
+
+.avatar-glow[data-state="unknown"] {
+  opacity: 0.25;
+  animation: none;
+}
+
+.avatar-ring {
+  border-radius: 9999px;
+  background: conic-gradient(
+    from 0deg,
+    transparent 0deg 210deg,
+    var(--accent) 300deg,
+    var(--peach) 340deg,
+    transparent 360deg
+  );
+  -webkit-mask: radial-gradient(farthest-side, transparent calc(100% - 1.5px), #000 calc(100% - 1px));
+  mask: radial-gradient(farthest-side, transparent calc(100% - 1.5px), #000 calc(100% - 1px));
+  animation: ring-spin 8s linear infinite;
+}
+
+@keyframes halo-pulse {
+  0%,
+  100% {
+    opacity: 0.4;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.75;
+    transform: scale(1.05);
+  }
+}
+
+@keyframes ring-spin {
+  to {
+    transform: rotate(1turn);
+  }
+}
+
+/* —— 品牌短语轮播 —— */
+.phrase-enter-active,
+.phrase-leave-active {
+  transition:
+    opacity 0.5s ease,
+    transform 0.5s cubic-bezier(0.22, 1, 0.36, 1),
+    filter 0.5s ease;
+}
+
+.phrase-enter-from {
+  opacity: 0;
+  transform: translateY(14px);
+  filter: blur(8px);
+}
+
+.phrase-leave-to {
+  opacity: 0;
+  transform: translateY(-14px);
+  filter: blur(8px);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
 }

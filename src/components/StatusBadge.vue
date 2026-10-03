@@ -12,11 +12,11 @@ const labels: Record<EndpointState, string> = {
 
 <template>
   <span
-    class="inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-medium"
+    class="inline-flex shrink-0 items-center gap-1.5 rounded-full border px-2.5 py-0.5 text-[11px] font-medium"
     :class="{
-      'bg-up/15 text-up': state === 'up',
-      'bg-down/15 text-down': state === 'down',
-      'bg-unknown/20 text-ink-dim': state === 'unknown',
+      'border-up/25 bg-up/10 text-up': state === 'up',
+      'border-down/30 bg-down/10 text-down': state === 'down',
+      'border-line bg-bg-inset text-ink-dim': state === 'unknown',
     }"
   >
     <span

@@ -5,8 +5,8 @@ export function formatDuration(ns: number): string {
   return `${(ms / 1000).toFixed(2)} s`
 }
 
-export function formatRelative(iso: string): string {
-  const diff = Date.now() - Date.parse(iso)
+export function formatRelative(iso: string, at: number = Date.now()): string {
+  const diff = at - Date.parse(iso)
   if (!Number.isFinite(diff)) return '—'
   const s = Math.max(0, Math.round(diff / 1000))
   if (s < 60) return `${s}s ago`

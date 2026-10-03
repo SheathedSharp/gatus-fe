@@ -3,7 +3,7 @@
 自建的 Gatus 状态页前端。后端（Gatus）保持原样，本项目只消费它的只读 API：
 
 - 数据源：`GET /api/v1/endpoints/statuses`
-- 开发环境：Vite 代理 `/api/*` → `https://status.example.com`
+- 开发环境：Vite 代理 `/api/*` → `https://monitor.example.com`
 - 生产环境：Cloudflare Pages Function 同源代理（见 `functions/api/[[path]].ts`）
 
 ## 技术栈
@@ -29,7 +29,9 @@ GATUS_API_BASE=https://monitor.example.com npm run dev
 
 | 想改什么 | 改哪里 |
 | --- | --- |
-| 配色 / 圆角 / 明暗主题 | `src/style.css` 顶部的 CSS 变量（`--up` `--down` `--bg` `--text` …） |
+| 配色（酒红 / 蜜桃）/ 字体 / 圆角 / 明暗主题 | `src/style.css` 顶部的 CSS 变量与 `@font-face`（`--accent` `--up` `--bg` `--text` …） |
+| 头像 / favicon | `public/avatar.jpg`、`public/favicon.svg` |
+| 品牌短语（轮播与页脚） | `src/App.vue` 的 `phrases` |
 | 状态徽章样式 | `src/components/StatusBadge.vue` |
 | 可用率条（颜色、条数、高度） | `src/components/UptimeBars.vue` |
 | 卡片布局 / 信息密度 | `src/components/EndpointCard.vue` |
@@ -52,7 +54,7 @@ npm run preview   # 本地预览构建产物
 2. 选择本仓库，构建配置：
    - Build command: `npm run build`
    - Build output directory: `dist`
-3. （可选）环境变量：`GATUS_API_BASE=https://status.example.com`
+3. （可选）环境变量：`GATUS_API_BASE=https://monitor.example.com`
 4. 部署后在 Pages 项目里绑定自定义域名
 
 方式二：命令行（当前使用方式，Pages 项目 `gatus-fe`）
@@ -65,9 +67,9 @@ npm run deploy   # 构建并部署到 Cloudflare Pages
 
 默认地址：https://your-project.pages.dev
 
-> 域名切换建议：先用一个临时域名（如 `s.example.com`）验证新 UI，
-> 确认没问题后再把 `status.example.com` 切过来，Gatus 后端挪到
-> `monitor.example.com`（改 Pages 环境变量 `GATUS_API_BASE` 即可）。
+> 域名布局：`status.example.com` 为前端（Cloudflare Pages），
+> `monitor.example.com` 为 Gatus 后端（Cloudflare Tunnel）。
+> 后端地址通过环境变量 `GATUS_API_BASE` 切换。
 
 ## 目录结构
 

@@ -8,7 +8,7 @@ export default defineConfig({
   server: {
     proxy: {
       '/api': {
-        target: process.env.GATUS_API_BASE ?? 'https://status.example.com',
+        target: process.env.GATUS_API_BASE ?? 'https://monitor.example.com',
         changeOrigin: true,
       },
     },

@@ -1,5 +1,5 @@
 interface Env {
-  /** Gatus 后端地址，默认 https://status.example.com */
+  /** Gatus 后端地址，默认 https://monitor.example.com */
   GATUS_API_BASE?: string
 }
 
@@ -14,7 +14,7 @@ interface PagesContext {
  * 避免 CORS，也方便以后切换后端地址（改环境变量即可）。
  */
 export const onRequest = async ({ request, params, env }: PagesContext): Promise<Response> => {
-  const base = (env.GATUS_API_BASE ?? 'https://status.example.com').replace(/\/+$/, '')
+  const base = (env.GATUS_API_BASE ?? 'https://monitor.example.com').replace(/\/+$/, '')
   const path = Array.isArray(params.path) ? params.path.join('/') : (params.path ?? '')
   const { search } = new URL(request.url)
 
