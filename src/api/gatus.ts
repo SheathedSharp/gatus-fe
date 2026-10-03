@@ -21,9 +21,12 @@ export interface GatusEndpoint {
 
 export type EndpointState = 'up' | 'down' | 'unknown'
 
-/** 拉取 Gatus API（开发环境由 Vite 代理，生产环境由 Pages Function 代理） */
+/** API 基地址：生产环境走跨区 Pages 代理（带 CORS），开发环境走 Vite 代理 */
+const API_BASE = import.meta.env.VITE_API_BASE ?? ''
+
+/** 拉取 Gatus API */
 export async function fetchEndpoints(signal?: AbortSignal): Promise<GatusEndpoint[]> {
-  const res = await fetch('/api/v1/endpoints/statuses', {
+  const res = await fetch(`${API_BASE}/api/v1/endpoints/statuses`, {
     signal,
     headers: { accept: 'application/json' },
   })
