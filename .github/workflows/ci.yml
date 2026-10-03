@@ -1,9 +1,13 @@
 name: CI
 
+# 说明：GitHub Actions 当前被账号账单问题停用，先改为手动触发。
+# 修复 Billing 后可改回:
+#   on:
+#     push:
+#       branches: [main]
+#     pull_request:
 on:
-  push:
-    branches: [main]
-  pull_request:
+  workflow_dispatch:
 
 jobs:
   build:
