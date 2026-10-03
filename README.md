@@ -55,12 +55,15 @@ npm run preview   # 本地预览构建产物
 3. （可选）环境变量：`GATUS_API_BASE=https://status.example.com`
 4. 部署后在 Pages 项目里绑定自定义域名
 
-方式二：命令行
+方式二：命令行（当前使用方式，Pages 项目 `gatus-fe`）
 
 ```bash
-npm run build
-npx wrangler pages deploy dist
+export CLOUDFLARE_API_TOKEN=xxx
+export CLOUDFLARE_ACCOUNT_ID=xxx
+npm run deploy   # 构建并部署到 Cloudflare Pages
 ```
+
+默认地址：https://your-project.pages.dev
 
 > 域名切换建议：先用一个临时域名（如 `s.example.com`）验证新 UI，
 > 确认没问题后再把 `status.example.com` 切过来，Gatus 后端挪到
