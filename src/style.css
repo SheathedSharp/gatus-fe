@@ -250,25 +250,21 @@ body {
   }
 }
 
-/* —— 品牌短语轮播 —— */
-.phrase-enter-active,
-.phrase-leave-active {
-  transition:
-    opacity 0.5s ease,
-    transform 0.5s cubic-bezier(0.22, 1, 0.36, 1),
-    filter 0.5s ease;
+/* —— 品牌短语轮播（GSAP 驱动，zayju. 为固定锚点） —— */
+.phrase-word {
+  visibility: hidden;
+  will-change: transform, opacity;
 }
 
-.phrase-enter-from {
-  opacity: 0;
-  transform: translateY(14px);
-  filter: blur(8px);
+/* —— 可用率条的悬浮详情 —— */
+.tip-enter-active,
+.tip-leave-active {
+  transition: opacity 0.15s ease;
 }
 
-.phrase-leave-to {
+.tip-enter-from,
+.tip-leave-to {
   opacity: 0;
-  transform: translateY(-14px);
-  filter: blur(8px);
 }
 
 @media (prefers-reduced-motion: reduce) {

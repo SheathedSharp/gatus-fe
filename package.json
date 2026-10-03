@@ -11,6 +11,7 @@
     "deploy": "npm run build && wrangler pages deploy dist --project-name gatus-fe"
   },
   "dependencies": {
+    "gsap": "^3.15.0",
     "vue": "^3.5.43"
   },
   "devDependencies": {

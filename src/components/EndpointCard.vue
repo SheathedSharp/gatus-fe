@@ -17,7 +17,7 @@ const relative = computed(() =>
 </script>
 
 <template>
-  <article class="card group relative overflow-hidden p-4">
+  <article class="card group relative p-4 hover:z-20">
     <div
       class="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-line-strong/70 to-transparent"
       aria-hidden="true"

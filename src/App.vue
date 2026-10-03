@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, onMounted, onUnmounted, ref } from 'vue'
+import { gsap } from 'gsap'
 import { endpointState, type GatusEndpoint, type GatusResult } from './api/gatus'
 import { useGatus } from './api/useGatus'
 import { formatDuration, formatRelative, uptimePercent } from './api/format'
@@ -33,7 +34,7 @@ function setTheme(next: boolean) {
   syncThemeColor()
 }
 
-/* ---------- 品牌短语轮播 ---------- */
+/* ---------- 品牌短语（GSAP 轮播） ---------- */
 
 const phrases = [
   { verb: 'Define', rest: 'Everything' },
@@ -42,18 +43,58 @@ const phrases = [
   { verb: 'Discover', rest: 'Everywhere' },
 ] as const
 
-const phraseIndex = ref(0)
-let phraseTimer: number | undefined
+const phraseStage = ref<HTMLElement | null>(null)
+let phraseMedia: gsap.MatchMedia | undefined
 
-onMounted(() => {
-  phraseTimer = window.setInterval(() => {
-    phraseIndex.value = (phraseIndex.value + 1) % phrases.length
-  }, 4000)
-})
+function setupPhraseAnimation(stage: HTMLElement) {
+  const items = Array.from(stage.querySelectorAll<HTMLElement>('.phrase-item'))
+  if (!items.length) return
 
-onUnmounted(() => window.clearInterval(phraseTimer))
+  phraseMedia = gsap.matchMedia()
 
-const phrase = computed(() => phrases[phraseIndex.value])
+  // 减少动态：只静态展示第一句
+  phraseMedia.add(
+    '(prefers-reduced-motion: reduce)',
+    () => {
+      const first = items[0]?.querySelectorAll<HTMLElement>('.phrase-word')
+      if (first?.length) gsap.set(first, { autoAlpha: 1 })
+    },
+    stage,
+  )
+
+  // 逐词进出：zayju. 固定为视觉锚点，只有短语在舞台上切换
+  phraseMedia.add(
+    '(prefers-reduced-motion: no-preference)',
+    () => {
+      const words = items.map((item) =>
+        Array.from(item.querySelectorAll<HTMLElement>('.phrase-word')),
+      )
+
+      gsap.set(words.flat(), { yPercent: 70, autoAlpha: 0 })
+      if (words[0]?.length) gsap.set(words[0], { yPercent: 0, autoAlpha: 1 })
+
+      const tl = gsap.timeline({ repeat: -1, defaults: { ease: 'power3.out' } })
+
+      words.forEach((group, i) => {
+        const next = words[(i + 1) % words.length]
+        if (!next) return
+        tl.to(
+          group,
+          { yPercent: -70, autoAlpha: 0, duration: 0.45, stagger: 0.06, ease: 'power2.in' },
+          '+=3.2',
+        ).fromTo(
+          next,
+          { yPercent: 70, autoAlpha: 0 },
+          { yPercent: 0, autoAlpha: 1, duration: 0.6, stagger: 0.06 },
+          '<0.08',
+        )
+      })
+
+      return () => tl.kill()
+    },
+    stage,
+  )
+}
 
 /* ---------- 状态汇总 ---------- */
 
@@ -168,6 +209,17 @@ function onRefresh() {
   spinTimer = window.setTimeout(() => (spinning.value = false), 700)
   void refresh()
 }
+
+/* ---------- 生命周期 ---------- */
+
+onMounted(() => {
+  if (phraseStage.value) setupPhraseAnimation(phraseStage.value)
+})
+
+onUnmounted(() => {
+  phraseMedia?.revert()
+  window.clearTimeout(spinTimer)
+})
 </script>
 
 <template>
@@ -175,84 +227,51 @@ function onRefresh() {
     <div class="aurora" aria-hidden="true" />
     <div class="grain" aria-hidden="true" />
 
-    <header
-      class="sticky top-0 z-40 border-b border-line/70 bg-bg/70 backdrop-blur-xl backdrop-saturate-150"
-    >
-      <div class="mx-auto flex h-16 max-w-5xl items-center justify-between gap-4 px-5">
-        <a href="/" class="flex items-center gap-2.5">
-          <img
-            src="/avatar.jpg"
-            alt=""
-            width="28"
-            height="28"
-            class="size-7 rounded-full object-cover ring-1 ring-line-strong/50"
-          />
-          <span class="font-display text-[17px] leading-none">
-            zayju<span class="text-accent">.</span>
-            <span class="ml-1.5 font-sans text-xs tracking-wide text-ink-dim">status</span>
-          </span>
-        </a>
-
-        <div class="flex items-center gap-2.5">
-          <span
-            class="hidden items-center gap-2 rounded-full border border-line bg-bg-soft/70 py-1.5 pl-2.5 pr-3 text-xs sm:inline-flex"
-          >
-            <span class="relative flex size-2">
-              <span
-                v-if="overall === 'up'"
-                class="absolute inline-flex size-full animate-ping rounded-full bg-up opacity-60"
-              />
-              <span class="relative inline-flex size-2 rounded-full" :class="dotClass[overall]" />
-            </span>
-            <span class="text-ink-dim">{{ overallLabel }}</span>
-          </span>
-
-          <div
-            class="relative flex rounded-full border border-line bg-bg-soft/70 p-0.5"
-            role="group"
-            aria-label="Theme"
-          >
-            <span
-              class="absolute left-0.5 top-0.5 size-7 rounded-full bg-bg-card shadow-sm transition-transform duration-300 ease-out"
-              :class="dark ? 'translate-x-7' : ''"
-              aria-hidden="true"
-            />
-            <button
-              type="button"
-              class="relative z-10 grid size-7 place-items-center rounded-full transition-colors"
-              :class="!dark ? 'text-accent' : 'text-ink-dim hover:text-ink'"
-              :aria-pressed="!dark"
-              aria-label="Light theme"
-              @click="setTheme(false)"
-            >
-              <AppIcon name="sun" class="size-3.5" />
-            </button>
-            <button
-              type="button"
-              class="relative z-10 grid size-7 place-items-center rounded-full transition-colors"
-              :class="dark ? 'text-accent' : 'text-ink-dim hover:text-ink'"
-              :aria-pressed="dark"
-              aria-label="Dark theme"
-              @click="setTheme(true)"
-            >
-              <AppIcon name="moon" class="size-3.5" />
-            </button>
-          </div>
-
-          <button
-            type="button"
-            class="grid size-8 place-items-center rounded-full border border-line bg-bg-soft/70 text-ink-dim transition-colors hover:text-ink"
-            aria-label="Refresh"
-            @click="onRefresh"
-          >
-            <AppIcon name="refresh" class="size-3.5" :class="spinning ? 'animate-spin' : ''" />
-          </button>
-        </div>
+    <div class="fixed right-4 top-4 z-40 flex items-center gap-2 sm:right-6 sm:top-5">
+      <div
+        class="relative flex rounded-full border border-line bg-bg-soft/70 p-0.5 shadow-sm backdrop-blur-xl backdrop-saturate-150"
+        role="group"
+        aria-label="Theme"
+      >
+        <span
+          class="absolute left-0.5 top-0.5 size-7 rounded-full bg-bg-card shadow-sm transition-transform duration-300 ease-out"
+          :class="dark ? 'translate-x-7' : ''"
+          aria-hidden="true"
+        />
+        <button
+          type="button"
+          class="relative z-10 grid size-7 place-items-center rounded-full transition-colors"
+          :class="!dark ? 'text-accent' : 'text-ink-dim hover:text-ink'"
+          :aria-pressed="!dark"
+          aria-label="Light theme"
+          @click="setTheme(false)"
+        >
+          <AppIcon name="sun" class="size-3.5" />
+        </button>
+        <button
+          type="button"
+          class="relative z-10 grid size-7 place-items-center rounded-full transition-colors"
+          :class="dark ? 'text-accent' : 'text-ink-dim hover:text-ink'"
+          :aria-pressed="dark"
+          aria-label="Dark theme"
+          @click="setTheme(true)"
+        >
+          <AppIcon name="moon" class="size-3.5" />
+        </button>
       </div>
-    </header>
+
+      <button
+        type="button"
+        class="grid size-8 place-items-center rounded-full border border-line bg-bg-soft/70 text-ink-dim shadow-sm backdrop-blur-xl backdrop-saturate-150 transition-colors hover:text-ink"
+        aria-label="Refresh"
+        @click="onRefresh"
+      >
+        <AppIcon name="refresh" class="size-3.5" :class="spinning ? 'animate-spin' : ''" />
+      </button>
+    </div>
 
     <main class="mx-auto max-w-5xl px-5">
-      <section class="pb-12 pt-14 text-center sm:pt-20">
+      <section class="pb-12 pt-16 text-center sm:pt-24">
         <div class="relative mx-auto size-24">
           <span class="avatar-glow" :data-state="overall" aria-hidden="true" />
           <span class="avatar-ring absolute -inset-1.5" aria-hidden="true" />
@@ -263,26 +282,43 @@ function onRefresh() {
             height="96"
             class="relative size-24 rounded-full object-cover ring-1 ring-line-strong/60"
           />
-          <span
-            class="absolute bottom-0 right-0 size-5 rounded-full border-[3px] border-bg"
-            :class="dotClass[overall]"
-            :title="overallLabel"
-          />
         </div>
 
-        <p class="mt-6 text-[11px] font-medium uppercase tracking-[0.24em] text-ink-dim">
-          example.com · status
+        <p
+          class="mt-6 inline-flex items-center gap-2 text-[11px] font-medium uppercase tracking-[0.24em] text-ink-dim"
+        >
+          <span class="relative flex size-1.5">
+            <span
+              class="absolute inline-flex size-full animate-ping rounded-full bg-up opacity-60"
+            />
+            <span class="relative inline-flex size-1.5 rounded-full bg-up" />
+          </span>
+          status.example.com
         </p>
 
         <h1
           class="font-display mx-auto mt-3 max-w-3xl text-4xl leading-[1.08] tracking-tight sm:text-6xl"
         >
-          <span class="text-accent">zayju.</span>
-          <Transition name="phrase" mode="out-in">
-            <span :key="phraseIndex" class="inline-block">
-              {{ phrase.verb }}&nbsp;<em class="italic">{{ phrase.rest }}</em>
+          <span class="block text-accent">zayju.</span>
+          <span class="sr-only">
+            Define Everything · Dream Endless · Dare Evolve · Discover Everywhere
+          </span>
+          <span
+            ref="phraseStage"
+            class="relative block h-[1.3em] overflow-hidden"
+            aria-hidden="true"
+          >
+            <span
+              v-for="p in phrases"
+              :key="p.verb"
+              class="phrase-item absolute inset-x-0 top-0 block"
+            >
+              <span class="phrase-word inline-block">{{ p.verb }}</span>{{ ' ' }}<em
+                class="phrase-word inline-block italic"
+                >{{ p.rest }}</em
+              >
             </span>
-          </Transition>
+          </span>
         </h1>
 
         <div class="mt-7 flex flex-wrap items-center justify-center gap-x-3 gap-y-2 text-sm">
@@ -318,11 +354,7 @@ function onRefresh() {
       </section>
 
       <div class="mt-14 space-y-12 pb-2">
-        <div
-          v-if="error"
-          class="card border-down/25 bg-down/5 p-4 text-sm text-down"
-          role="alert"
-        >
+        <div v-if="error" class="card border-down/25 bg-down/5 p-4 text-sm text-down" role="alert">
           API error: {{ error }}
         </div>
 
@@ -340,10 +372,7 @@ function onRefresh() {
           </div>
         </div>
 
-        <p
-          v-else-if="!endpoints.length"
-          class="py-16 text-center text-sm text-ink-dim"
-        >
+        <p v-else-if="!endpoints.length" class="py-16 text-center text-sm text-ink-dim">
           No endpoints returned by the API.
         </p>
 
@@ -397,11 +426,7 @@ function onRefresh() {
           </div>
 
           <ul class="grid content-start gap-3 sm:grid-cols-2">
-            <li
-              v-for="(p, i) in phrases"
-              :key="p.verb"
-              class="flex items-baseline gap-3"
-            >
+            <li v-for="(p, i) in phrases" :key="p.verb" class="flex items-baseline gap-3">
               <span class="font-mono text-[10px] text-accent">
                 {{ String(i + 1).padStart(2, '0') }}
               </span>
