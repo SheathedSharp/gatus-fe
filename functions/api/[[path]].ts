@@ -1,6 +1,9 @@
 interface Env {
   /** Gatus 后端地址，默认 https://monitor.example.com */
   GATUS_API_BASE?: string
+  /** Cloudflare Access Service Token（monitor 受 Zero Trust 保护） */
+  CF_ACCESS_CLIENT_ID?: string
+  CF_ACCESS_CLIENT_SECRET?: string
 }
 
 interface PagesContext {
@@ -16,13 +19,13 @@ const CORS_HEADERS = {
 }
 
 /**
- * Cloudflare Pages Function：把 /api/* 代理到 Gatus 后端。
+ * Cloudflare Pages Function：把 /api/* 代理到 Gatus 后端（monitor.example.com）。
  *
- * 注意：本 Function 必须通过 pages.dev 域名访问（跨 Zone），
- * 若通过 example.com 的自定义域名访问，Cloudflare 会把同 Zone 子请求
- * 直接送往源站、绕过隧道，导致 404。
- * 因此前端生产环境通过 VITE_API_BASE=https://your-project.pages.dev 直连这里，
- * 由这里附带 CORS 头，浏览器跨域读取。
+ * - 必须通过 pages.dev 域名访问（跨 Zone），同 Zone 子请求会被 Cloudflare
+ *   直接送往源站、绕过隧道导致 404。
+ * - monitor 受 Zero Trust 保护，这里用 Service Token 通过 Access 校验。
+ * - 前端生产环境通过 VITE_API_BASE=https://your-project.pages.dev 直连这里，
+ *   由这里附带 CORS 头，浏览器跨域读取。
  */
 export const onRequest = async ({ request, params, env }: PagesContext): Promise<Response> => {
   if (request.method === 'OPTIONS') {
@@ -33,10 +36,26 @@ export const onRequest = async ({ request, params, env }: PagesContext): Promise
   const path = Array.isArray(params.path) ? params.path.join('/') : (params.path ?? '')
   const { search } = new URL(request.url)
 
+  const headers: Record<string, string> = {
+    accept: 'application/json',
+    'accept-encoding': 'gzip',
+  }
+  if (env.CF_ACCESS_CLIENT_ID && env.CF_ACCESS_CLIENT_SECRET) {
+    headers['CF-Access-Client-Id'] = env.CF_ACCESS_CLIENT_ID
+    headers['CF-Access-Client-Secret'] = env.CF_ACCESS_CLIENT_SECRET
+  }
+
   const target = `${base}/api/${path}${search}`
-  const upstream = await fetch(target, {
-    headers: { accept: 'application/json', 'accept-encoding': 'gzip' },
-  })
+  const upstream = await fetch(target, { headers })
+
+  // 如果 Access 没有放行（凭据缺失/失效），返回明确的错误而不是登录页
+  const location = upstream.headers.get('location') ?? ''
+  if (upstream.status >= 300 && upstream.status < 400 && location.includes('cloudflareaccess.com')) {
+    return new Response(JSON.stringify({ error: 'Upstream is protected by Cloudflare Access and the service token was rejected' }), {
+      status: 502,
+      headers: { 'content-type': 'application/json', ...CORS_HEADERS },
+    })
+  }
 
   return new Response(upstream.body, {
     status: upstream.status,

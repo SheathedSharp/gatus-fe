@@ -70,7 +70,7 @@ function setupPhraseAnimation(stage: HTMLElement) {
         Array.from(item.querySelectorAll<HTMLElement>('.phrase-word')),
       )
 
-      gsap.set(words.flat(), { yPercent: 70, autoAlpha: 0 })
+      gsap.set(words.flat(), { yPercent: 55, autoAlpha: 0 })
       if (words[0]?.length) gsap.set(words[0], { yPercent: 0, autoAlpha: 1 })
 
       const tl = gsap.timeline({ repeat: -1, defaults: { ease: 'power3.out' } })
@@ -80,11 +80,11 @@ function setupPhraseAnimation(stage: HTMLElement) {
         if (!next) return
         tl.to(
           group,
-          { yPercent: -70, autoAlpha: 0, duration: 0.45, stagger: 0.06, ease: 'power2.in' },
+          { yPercent: -55, autoAlpha: 0, duration: 0.45, stagger: 0.06, ease: 'power2.in' },
           '+=3.2',
         ).fromTo(
           next,
-          { yPercent: 70, autoAlpha: 0 },
+          { yPercent: 55, autoAlpha: 0 },
           { yPercent: 0, autoAlpha: 1, duration: 0.6, stagger: 0.06 },
           '<0.08',
         )
@@ -124,11 +124,11 @@ const dotClass: Record<Overall, string> = {
   unknown: 'bg-unknown',
 }
 
-const chipClass: Record<Overall, string> = {
-  up: 'border-up/25 bg-up/10 text-up',
-  degraded: 'border-degraded/30 bg-degraded/10 text-degraded',
-  down: 'border-down/30 bg-down/10 text-down',
-  unknown: 'border-line bg-bg-inset text-ink-dim',
+const statusTone: Record<Overall, string> = {
+  up: 'text-up',
+  degraded: 'text-degraded',
+  down: 'text-down',
+  unknown: 'text-ink-dim',
 }
 
 const upCount = computed(() => endpoints.value.filter((e) => endpointState(e) === 'up').length)
@@ -227,46 +227,35 @@ onUnmounted(() => {
     <div class="aurora" aria-hidden="true" />
     <div class="grain" aria-hidden="true" />
 
-    <div class="fixed right-4 top-4 z-40 flex items-center gap-2 sm:right-6 sm:top-5">
-      <div
-        class="relative flex rounded-full border border-line bg-bg-soft/70 p-0.5 shadow-sm backdrop-blur-xl backdrop-saturate-150"
-        role="group"
-        aria-label="Theme"
-      >
-        <span
-          class="absolute left-0.5 top-0.5 size-7 rounded-full bg-bg-card shadow-sm transition-transform duration-300 ease-out"
-          :class="dark ? 'translate-x-7' : ''"
-          aria-hidden="true"
-        />
-        <button
-          type="button"
-          class="relative z-10 grid size-7 place-items-center rounded-full transition-colors"
-          :class="!dark ? 'text-accent' : 'text-ink-dim hover:text-ink'"
-          :aria-pressed="!dark"
-          aria-label="Light theme"
-          @click="setTheme(false)"
-        >
-          <AppIcon name="sun" class="size-3.5" />
-        </button>
-        <button
-          type="button"
-          class="relative z-10 grid size-7 place-items-center rounded-full transition-colors"
-          :class="dark ? 'text-accent' : 'text-ink-dim hover:text-ink'"
-          :aria-pressed="dark"
-          aria-label="Dark theme"
-          @click="setTheme(true)"
-        >
-          <AppIcon name="moon" class="size-3.5" />
-        </button>
-      </div>
-
+    <div class="fixed right-4 top-4 z-40 flex items-center sm:right-6 sm:top-5">
       <button
         type="button"
-        class="grid size-8 place-items-center rounded-full border border-line bg-bg-soft/70 text-ink-dim shadow-sm backdrop-blur-xl backdrop-saturate-150 transition-colors hover:text-ink"
+        class="grid size-8 place-items-center transition-colors"
+        :class="!dark ? 'text-accent' : 'text-ink-dim hover:text-ink'"
+        :aria-pressed="!dark"
+        aria-label="Light theme"
+        @click="setTheme(false)"
+      >
+        <AppIcon name="sun" class="size-4" />
+      </button>
+      <button
+        type="button"
+        class="grid size-8 place-items-center transition-colors"
+        :class="dark ? 'text-accent' : 'text-ink-dim hover:text-ink'"
+        :aria-pressed="dark"
+        aria-label="Dark theme"
+        @click="setTheme(true)"
+      >
+        <AppIcon name="moon" class="size-4" />
+      </button>
+      <span class="mx-1.5 h-4 w-px bg-line" aria-hidden="true" />
+      <button
+        type="button"
+        class="grid size-8 place-items-center text-ink-dim transition-colors hover:text-ink"
         aria-label="Refresh"
         @click="onRefresh"
       >
-        <AppIcon name="refresh" class="size-3.5" :class="spinning ? 'animate-spin' : ''" />
+        <AppIcon name="refresh" class="size-4" :class="spinning ? 'animate-spin' : ''" />
       </button>
     </div>
 
@@ -297,23 +286,13 @@ onUnmounted(() => {
         </p>
 
         <h1
-          class="font-display mx-auto mt-3 max-w-3xl text-4xl leading-[1.08] tracking-tight sm:text-6xl"
+          class="font-display mx-auto mt-4 flex items-baseline justify-center gap-3 whitespace-nowrap text-[clamp(1.25rem,7.1vw,3.75rem)] font-light tracking-tight"
+          aria-label="zayju. Define Everything, Dream Endless, Dare Evolve, Discover Everywhere"
         >
-          <span class="block text-accent">zayju.</span>
-          <span class="sr-only">
-            Define Everything · Dream Endless · Dare Evolve · Discover Everywhere
-          </span>
-          <span
-            ref="phraseStage"
-            class="relative block h-[1.3em] overflow-hidden"
-            aria-hidden="true"
-          >
-            <span
-              v-for="p in phrases"
-              :key="p.verb"
-              class="phrase-item absolute inset-x-0 top-0 block"
-            >
-              <span class="phrase-word inline-block">{{ p.verb }}</span>{{ ' ' }}<em
+          <span class="font-medium text-accent">zayju.</span>
+          <span ref="phraseStage" class="relative inline-grid select-none" aria-hidden="true">
+            <span v-for="p in phrases" :key="p.verb" class="phrase-item col-start-1 row-start-1">
+              <em class="phrase-word inline-block italic">{{ p.verb }}</em>{{ ' ' }}<em
                 class="phrase-word inline-block italic"
                 >{{ p.rest }}</em
               >
@@ -321,11 +300,8 @@ onUnmounted(() => {
           </span>
         </h1>
 
-        <div class="mt-7 flex flex-wrap items-center justify-center gap-x-3 gap-y-2 text-sm">
-          <span
-            class="inline-flex items-center gap-2 rounded-full border px-3 py-1 text-[13px] font-medium"
-            :class="chipClass[overall]"
-          >
+        <div class="mt-7 flex flex-wrap items-center justify-center gap-x-2.5 gap-y-2 text-[13px]">
+          <span class="inline-flex items-center gap-2 font-medium" :class="statusTone[overall]">
             <span class="relative flex size-2">
               <span
                 v-if="overall === 'up'"
@@ -335,9 +311,8 @@ onUnmounted(() => {
             </span>
             {{ overallLabel }}
           </span>
-          <span class="text-[13px] tabular-nums text-ink-dim">
-            {{ updatedText ?? 'connecting…' }}
-          </span>
+          <span class="text-ink-dim/50">·</span>
+          <span class="tabular-nums text-ink-dim">{{ updatedText ?? 'connecting…' }}</span>
         </div>
       </section>
 
@@ -362,13 +337,13 @@ onUnmounted(() => {
           <div v-for="i in 6" :key="i" class="card p-4">
             <div class="flex items-start justify-between gap-3">
               <div class="space-y-2">
-                <div class="h-4 w-28 animate-pulse rounded-full bg-bg-inset" />
-                <div class="h-3 w-36 animate-pulse rounded-full bg-bg-inset" />
+                <div class="h-4 w-28 animate-pulse rounded bg-bg-inset" />
+                <div class="h-3 w-36 animate-pulse rounded bg-bg-inset" />
               </div>
-              <div class="h-5 w-14 animate-pulse rounded-full bg-bg-inset" />
+              <div class="h-5 w-14 animate-pulse rounded bg-bg-inset" />
             </div>
             <div class="mt-4 h-9 animate-pulse rounded-lg bg-bg-inset" />
-            <div class="mt-3 h-3 w-40 animate-pulse rounded-full bg-bg-inset" />
+            <div class="mt-3 h-3 w-40 animate-pulse rounded bg-bg-inset" />
           </div>
         </div>
 
@@ -395,48 +370,32 @@ onUnmounted(() => {
 
     <footer class="mx-auto mt-20 max-w-5xl px-5 pb-16">
       <div class="border-t border-line pt-10">
-        <div class="grid gap-10 sm:grid-cols-[1.1fr_1fr]">
+        <div class="flex items-center gap-3">
+          <img
+            src="/avatar.jpg"
+            alt=""
+            width="36"
+            height="36"
+            class="size-9 rounded-full object-cover ring-1 ring-line-strong/50"
+          />
           <div>
-            <div class="flex items-center gap-3">
-              <img
-                src="/avatar.jpg"
-                alt=""
-                width="36"
-                height="36"
-                class="size-9 rounded-full object-cover ring-1 ring-line-strong/50"
-              />
-              <div>
-                <p class="font-display text-lg leading-none">
-                  zayju<span class="text-accent">.</span>
-                </p>
-                <a
-                  href="https://example.com"
-                  target="_blank"
-                  rel="noreferrer"
-                  class="mt-1 inline-flex items-center gap-1 text-xs text-ink-dim transition-colors hover:text-accent"
-                >
-                  example.com
-                  <AppIcon name="arrow" class="size-3" />
-                </a>
-              </div>
-            </div>
-            <p class="mt-4 max-w-xs text-xs leading-relaxed text-ink-dim">
-              A quiet watchtower over every service. Powered by the Gatus API, Vue and Tailwind.
+            <p class="font-display text-lg leading-none">
+              zayju<span class="text-accent">.</span>
             </p>
+            <a
+              href="https://example.com"
+              target="_blank"
+              rel="noreferrer"
+              class="mt-1 inline-flex items-center gap-1 text-xs text-ink-dim transition-colors hover:text-accent"
+            >
+              example.com
+              <AppIcon name="arrow" class="size-3" />
+            </a>
           </div>
-
-          <ul class="grid content-start gap-3 sm:grid-cols-2">
-            <li v-for="(p, i) in phrases" :key="p.verb" class="flex items-baseline gap-3">
-              <span class="font-mono text-[10px] text-accent">
-                {{ String(i + 1).padStart(2, '0') }}
-              </span>
-              <span class="font-display text-sm text-ink-dim">
-                <span class="text-ink">zayju.</span> {{ p.verb }}
-                <em class="italic">{{ p.rest }}</em>
-              </span>
-            </li>
-          </ul>
         </div>
+        <p class="mt-4 max-w-xs text-xs leading-relaxed text-ink-dim">
+          A quiet watchtower over every service. Powered by the Gatus API, Vue and Tailwind.
+        </p>
       </div>
     </footer>
   </div>
