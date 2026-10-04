@@ -17,7 +17,7 @@ const relative = computed(() =>
 </script>
 
 <template>
-  <article class="card group relative p-4 hover:z-20">
+  <article class="card group relative p-4 hover:z-20" data-anim="endpoint">
     <div
       class="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-line-strong/70 to-transparent"
       aria-hidden="true"

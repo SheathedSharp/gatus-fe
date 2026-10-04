@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted, onUnmounted, ref } from 'vue'
+import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
 import { gsap } from 'gsap'
 import { endpointState, type GatusEndpoint, type GatusResult } from './api/gatus'
 import { useGatus } from './api/useGatus'
@@ -49,58 +49,108 @@ const phrases = [
   { verb: 'Discover', rest: 'Everywhere' },
 ] as const
 
+const root = ref<HTMLElement | null>(null)
 const phraseStage = ref<HTMLElement | null>(null)
-let phraseMedia: gsap.MatchMedia | undefined
+let pageMedia: gsap.MatchMedia | undefined
 
-function setupPhraseAnimation(stage: HTMLElement) {
+const PHRASE_HOLD = 2.9
+const PHRASE_ROLL = 0.72
+
+/**
+ * 短语整体做「卷轴」式滚动：上一句向上滚出、下一句从下方同步滚入，
+ * 两条补间共享同一时长与缓动，衔接处严丝合缝。
+ */
+function setupPhraseRoll(stage: HTMLElement) {
   const items = Array.from(stage.querySelectorAll<HTMLElement>('.phrase-item'))
-  if (!items.length) return
+  if (items.length < 2) return
 
-  phraseMedia = gsap.matchMedia()
+  gsap.set(items, { autoAlpha: 1, yPercent: 100 })
+  gsap.set(items[0], { yPercent: 0 })
 
-  // 减少动态：只静态展示第一句
-  phraseMedia.add(
-    '(prefers-reduced-motion: reduce)',
-    () => {
-      const first = items[0]?.querySelectorAll<HTMLElement>('.phrase-word')
-      if (first?.length) gsap.set(first, { autoAlpha: 1 })
-    },
-    stage,
+  let index = 0
+  let loop: gsap.core.Timeline | undefined
+
+  const cycle = () => {
+    const from = items[index]
+    index = (index + 1) % items.length
+    const to = items[index]
+
+    // 短语此刻在舞台外，瞬移到下方等待滚入，不可见也不会闪现
+    gsap.set(to, { yPercent: 100 })
+
+    loop = gsap.timeline({ delay: PHRASE_HOLD, onComplete: cycle })
+    loop
+      .to(from, { yPercent: -100, duration: PHRASE_ROLL, ease: 'power3.inOut' }, 0)
+      .to(to, { yPercent: 0, duration: PHRASE_ROLL, ease: 'power3.inOut' }, 0)
+  }
+
+  cycle()
+
+  return () => loop?.kill()
+}
+
+/* ---------- 首屏与数据入场（GSAP） ---------- */
+
+function playIntro() {
+  const el = root.value
+  if (!el) return
+
+  const hero = Array.from(el.querySelectorAll<HTMLElement>('[data-anim="hero"]'))
+  const stats = Array.from(el.querySelectorAll<HTMLElement>('#overview .card'))
+  if (!hero.length && !stats.length) return
+
+  gsap.set([...hero, ...stats], { autoAlpha: 0, y: 14 })
+  stats.forEach((card) => card.classList.add('no-transition'))
+
+  gsap
+    .timeline({
+      defaults: { duration: 0.7, ease: 'power3.out' },
+      delay: 0.05,
+      onComplete: () => stats.forEach((card) => card.classList.remove('no-transition')),
+    })
+    .to(hero, { autoAlpha: 1, y: 0, stagger: 0.09 })
+    .to(
+      stats,
+      { autoAlpha: 1, y: 0, stagger: 0.07, clearProps: 'transform,opacity,visibility' },
+      '-=0.45',
+    )
+}
+
+let cardsIntroPlayed = false
+
+function playCards() {
+  if (cardsIntroPlayed || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return
+  const el = root.value
+  if (!el) return
+
+  const targets = Array.from(
+    el.querySelectorAll<HTMLElement>('[data-anim="group"], [data-anim="endpoint"]'),
   )
+  if (!targets.length) return
+  cardsIntroPlayed = true
 
-  // 逐词进出：zayju. 固定为视觉锚点，只有短语在舞台上切换
-  phraseMedia.add(
-    '(prefers-reduced-motion: no-preference)',
-    () => {
-      const words = items.map((item) =>
-        Array.from(item.querySelectorAll<HTMLElement>('.phrase-word')),
-      )
+  targets.forEach((target) => target.classList.add('no-transition'))
 
-      gsap.set(words.flat(), { yPercent: 55, autoAlpha: 0 })
-      if (words[0]?.length) gsap.set(words[0], { yPercent: 0, autoAlpha: 1 })
-
-      const tl = gsap.timeline({ repeat: -1, defaults: { ease: 'power3.out' } })
-
-      words.forEach((group, i) => {
-        const next = words[(i + 1) % words.length]
-        if (!next) return
-        tl.to(
-          group,
-          { yPercent: -55, autoAlpha: 0, duration: 0.45, stagger: 0.06, ease: 'power2.in' },
-          '+=3.2',
-        ).fromTo(
-          next,
-          { yPercent: 55, autoAlpha: 0 },
-          { yPercent: 0, autoAlpha: 1, duration: 0.6, stagger: 0.06 },
-          '<0.08',
-        )
-      })
-
-      return () => tl.kill()
+  gsap.fromTo(
+    targets,
+    { autoAlpha: 0, y: 16 },
+    {
+      autoAlpha: 1,
+      y: 0,
+      duration: 0.55,
+      ease: 'power3.out',
+      stagger: { each: 0.045, from: 'start' },
+      clearProps: 'transform,opacity,visibility',
+      onComplete: () => targets.forEach((target) => target.classList.remove('no-transition')),
     },
-    stage,
   )
 }
+
+watch([loading, endpoints], async () => {
+  if (loading.value || !endpoints.value.length) return
+  await nextTick()
+  playCards()
+})
 
 /* ---------- 状态汇总 ---------- */
 
@@ -219,17 +269,29 @@ function onRefresh() {
 /* ---------- 生命周期 ---------- */
 
 onMounted(() => {
-  if (phraseStage.value) setupPhraseAnimation(phraseStage.value)
+  pageMedia = gsap.matchMedia()
+
+  // 减少动态：只静态展示第一句，其余全部跳过
+  pageMedia.add('(prefers-reduced-motion: reduce)', () => {
+    const first = phraseStage.value?.querySelector<HTMLElement>('.phrase-item')
+    if (first) gsap.set(first, { autoAlpha: 1 })
+  })
+
+  pageMedia.add('(prefers-reduced-motion: no-preference)', () => {
+    const stopPhrase = phraseStage.value ? setupPhraseRoll(phraseStage.value) : undefined
+    playIntro()
+    return () => stopPhrase?.()
+  })
 })
 
 onUnmounted(() => {
-  phraseMedia?.revert()
+  pageMedia?.revert()
   window.clearTimeout(spinTimer)
 })
 </script>
 
 <template>
-  <div class="relative min-h-full">
+  <div ref="root" class="relative min-h-full">
     <div class="aurora" aria-hidden="true" />
     <div class="grain" aria-hidden="true" />
 
@@ -269,7 +331,7 @@ onUnmounted(() => {
 
     <main class="mx-auto max-w-5xl px-5">
       <section class="pb-12 pt-16 text-center sm:pt-24">
-        <div class="relative mx-auto size-24">
+        <div class="relative mx-auto size-24" data-anim="hero">
           <span class="avatar-glow" :data-state="overall" aria-hidden="true" />
           <span class="avatar-ring absolute -inset-1.5" aria-hidden="true" />
           <img
@@ -283,6 +345,7 @@ onUnmounted(() => {
 
         <p
           class="mt-6 inline-flex items-center gap-2 text-[11px] font-medium uppercase tracking-[0.24em] text-ink-dim"
+          data-anim="hero"
         >
           <span class="relative flex size-1.5">
             <span
@@ -296,19 +359,20 @@ onUnmounted(() => {
         <h1
           class="font-display mx-auto mt-4 flex items-baseline justify-center gap-3 whitespace-nowrap text-[clamp(1.25rem,7.1vw,3.75rem)] font-light tracking-tight"
           aria-label="zayju. Define Everything, Dream Endless, Dare Evolve, Discover Everywhere"
+          data-anim="hero"
         >
           <span class="font-medium text-accent">zayju.</span>
-          <span ref="phraseStage" class="relative inline-grid select-none" aria-hidden="true">
+          <span ref="phraseStage" class="phrase-stage relative inline-grid select-none" aria-hidden="true">
             <span v-for="p in phrases" :key="p.verb" class="phrase-item col-start-1 row-start-1">
-              <em class="phrase-word inline-block italic">{{ p.verb }}</em>{{ ' ' }}<em
-                class="phrase-word inline-block italic"
-                >{{ p.rest }}</em
-              >
+              <em class="italic">{{ p.verb }}</em> <em class="italic">{{ p.rest }}</em>
             </span>
           </span>
         </h1>
 
-        <div class="mt-7 flex flex-wrap items-center justify-center gap-x-2.5 gap-y-2 text-[13px]">
+        <div
+          class="mt-7 flex flex-wrap items-center justify-center gap-x-2.5 gap-y-2 text-[13px]"
+          data-anim="hero"
+        >
           <span class="inline-flex items-center gap-2 font-medium" :class="statusTone[overall]">
             <span class="relative flex size-2">
               <span
@@ -324,7 +388,7 @@ onUnmounted(() => {
         </div>
       </section>
 
-      <section aria-label="Overview" class="grid grid-cols-2 gap-3 lg:grid-cols-4">
+      <section id="overview" aria-label="Overview" class="grid grid-cols-2 gap-3 lg:grid-cols-4">
         <div v-for="stat in stats" :key="stat.label" class="card p-4">
           <p class="text-[10px] font-semibold uppercase tracking-[0.18em] text-ink-dim">
             {{ stat.label }}
@@ -361,7 +425,7 @@ onUnmounted(() => {
 
         <template v-else>
           <section v-for="[group, list] in groups" :key="group">
-            <div class="mb-4 flex items-center gap-3">
+            <div class="mb-4 flex items-center gap-3" data-anim="group">
               <h2 class="text-[11px] font-semibold uppercase tracking-[0.18em] text-ink-dim">
                 {{ group }}
               </h2>

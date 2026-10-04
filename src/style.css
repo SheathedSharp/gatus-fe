@@ -251,9 +251,19 @@ body {
 }
 
 /* —— 品牌短语轮播（GSAP 驱动，zayju. 为固定锚点） —— */
-.phrase-word {
+.phrase-stage {
+  /* 上下裁切出「卷轴」窗口，左右留白避免斜体溢出处被切 */
+  clip-path: inset(0 -0.4em);
+}
+
+.phrase-item {
   visibility: hidden;
-  will-change: transform, opacity;
+  will-change: transform;
+}
+
+/* GSAP 接管 transform 时关掉 CSS 过渡，避免两套动画互相拉扯 */
+.no-transition {
+  transition: none !important;
 }
 
 /* —— 可用率条的悬浮详情 —— */
