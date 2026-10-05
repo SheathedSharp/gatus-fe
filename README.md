@@ -7,6 +7,7 @@ Vue 3 · TypeScript · Vite · Tailwind CSS v4 · GSAP · Cloudflare Pages
 ## 特性
 
 - 端点分组、可用率条、可用率与响应耗时统计
+- 每个端点展示服务图标与可点击公网地址（受 Cloudflare Access 保护的会标注锁形图标）
 - 检查详情悬浮窗：时间戳、响应时间、HTTP 状态、条件断言逐条展示
 - 品牌短语 GSAP 轮播，适配 `prefers-reduced-motion`
 - 30 秒轮询，相对时间实时刷新
@@ -51,6 +52,7 @@ Cloudflare Pages：
 | 头像 / favicon | `public/avatar.jpg`、`public/favicon.svg` |
 | 品牌短语 | `src/App.vue` 的 `phrases` |
 | 卡片 / 徽章 / 可用率条 | `src/components/` |
+| 端点图标与跳转链接 | `src/api/presentation.ts`（子域名 + `VITE_SITE_URL` 推导地址） |
 | 轮询间隔 / 数据加工 | `src/api/` |
 
 ## 目录结构

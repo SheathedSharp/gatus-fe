@@ -2,6 +2,7 @@
 import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
 import { gsap } from 'gsap'
 import { endpointState, type GatusEndpoint, type GatusResult } from './api/gatus'
+import { bareHost } from './api/presentation'
 import { useGatus } from './api/useGatus'
 import { formatDuration, formatRelative, uptimePercent } from './api/format'
 import { now } from './api/useNow'
@@ -14,7 +15,7 @@ const { endpoints, error, loading, lastUpdated, refresh } = useGatus(30_000)
 
 const siteHost = import.meta.env.VITE_SITE_HOST ?? 'status.example.com'
 const siteUrl = import.meta.env.VITE_SITE_URL ?? 'https://example.com'
-const siteLink = siteUrl.replace(/^https?:\/\//, '').replace(/\/+$/, '')
+const siteLink = bareHost(siteUrl)
 
 /* ---------- 主题 ---------- */
 
@@ -433,7 +434,12 @@ onUnmounted(() => {
               <span class="font-mono text-[10px] text-ink-dim">{{ list.length }}</span>
             </div>
             <div class="grid gap-3.5 sm:grid-cols-2 lg:grid-cols-3">
-              <EndpointCard v-for="endpoint in list" :key="endpoint.key" :endpoint="endpoint" />
+              <EndpointCard
+                v-for="endpoint in list"
+                :key="endpoint.key"
+                :endpoint="endpoint"
+                :site-url="siteUrl"
+              />
             </div>
           </section>
         </template>

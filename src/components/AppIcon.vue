@@ -1,5 +1,5 @@
 <script setup lang="ts">
-defineProps<{ name: 'sun' | 'moon' | 'refresh' | 'arrow' }>()
+defineProps<{ name: 'sun' | 'moon' | 'refresh' | 'arrow' | 'lock' }>()
 </script>
 
 <template>
@@ -27,6 +27,11 @@ defineProps<{ name: 'sun' | 'moon' | 'refresh' | 'arrow' }>()
       v-else-if="name === 'refresh'"
       d="M16.023 9.348h4.992V4.356M2.985 19.644v-4.992h4.992m-4.993 0 3.181 3.183a8.25 8.25 0 0 0 13.803-3.7M4.031 9.865a8.25 8.25 0 0 1 13.803-3.7l3.181 3.182"
     />
+    <template v-else-if="name === 'lock'">
+      <path d="M7.25 10.5V8a4.75 4.75 0 0 1 9.5 0v2.5" />
+      <rect x="5" y="10.5" width="14" height="9.5" rx="2" />
+      <path d="M12 14.5v2" />
+    </template>
     <path v-else d="M4.5 19.5l15-15m0 0H8.25m11.25 0v11.25" />
   </svg>
 </template>
